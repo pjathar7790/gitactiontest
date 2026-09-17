@@ -1,1 +1,53 @@
 
+name: Automation Execution
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    # Runs every day at 01:00 UTC
+    - cron: '0 1 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Verify Maven
+        run: mvn -version
+
+      - name: Install Dependencies
+        run: mvn clean install -DskipTests
+
+      - name: Execute Robot Tests
+        run: |
+          mvn test
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            reports/
+            output.xml
+            log.html
+            report.html
